@@ -1,20 +1,6 @@
-[repositories]
-root = .
-prelude = prelude
-shim = shim
+[cells]
+gh_facebook_ocamlrep = .
+shim_DISABLED = shim
 
-[repository_aliases]
-config = prelude
-ovr_config = prelude
-toolchains = shim
-fbcode = shim
-fbcode_macros = shim
-fbsource = shim
-buck = shim
-
-[parser]
-target_platform_detector_spec = target:root//...->prelude//platforms:default target:shim//...->prelude//platforms:default
-
-# Enable this in the fullness of time.
-#   [buildfile]
-#   name=TARGETS
+[cell_aliases]
+root = gh_facebook_ocamlrep
