@@ -1,5 +1,5 @@
 load("@fbcode//common/ocaml/interop:defs.bzl", "RUST_FLAGS_2018")
-load("@fbcode_macros//build_defs:rust_library.bzl", "rust_library")
+load("@fbsource//tools/build_defs:rust_library.bzl", "rust_library")
 
 oncall("hack")
 
@@ -9,6 +9,13 @@ rust_library(
     autocargo = {
         "cargo_target_config": {
             "doctest": False,
+        },
+        "cargo_toml_config": {
+            "dependencies_override": {
+                "dependencies": {
+                    "bumpalo": {"features": ["collections"]},
+                },
+            },
         },
     },
     doctests = False,

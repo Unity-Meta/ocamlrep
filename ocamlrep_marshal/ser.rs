@@ -18,12 +18,13 @@ use ocamlrep::Value;
 
 use crate::intext::*;
 
-extern "C" {
+unsafe extern "C" {
     fn ocaml_version() -> usize;
 }
 
 bitflags::bitflags! {
     /// Flags affecting marshaling
+    #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
     pub struct ExternFlags: u8 {
         /// Flag to ignore sharing
         const NO_SHARING = 1;
@@ -113,7 +114,7 @@ const BITS_WORD: usize = 8 * std::mem::size_of::<usize>();
 
 #[inline]
 const fn bitvect_size(n: usize) -> usize {
-    (n + BITS_WORD - 1) / BITS_WORD
+    n.div_ceil(BITS_WORD)
 }
 
 const POS_TABLE_INIT_SIZE_LOG2: usize = 8;
@@ -412,7 +413,7 @@ impl<'a, W: Write> State<'a, W> {
             // Check the prevailing OCaml version is well initialized & one
             // we've tested for.
             let which_ocaml = unsafe { ocaml_version() };
-            if ![41400, 41401, 50000].contains(&which_ocaml) {
+            if ![41400, 41401, 50000, 50100, 50101, 50200].contains(&which_ocaml) {
                 panic!("unexpected ocaml version: {which_ocaml}!");
             }
 

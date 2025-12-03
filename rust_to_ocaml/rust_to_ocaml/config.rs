@@ -5,10 +5,10 @@
 
 use std::str::FromStr;
 
-use indexmap::indexmap;
-use indexmap::indexset;
 use indexmap::IndexMap;
 use indexmap::IndexSet;
+use indexmap::indexmap;
+use indexmap::indexset;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -26,14 +26,14 @@ pub struct Config {
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 struct ModulesConfig {
-    #[serde(default, with = "indexmap::serde_seq")]
+    #[serde(default, with = "indexmap::map::serde_seq")]
     rename: IndexMap<ModuleName, ModuleName>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct TypesConfig {
     transparent: IndexSet<RustTypePath>,
-    #[serde(with = "indexmap::serde_seq")]
+    #[serde(with = "indexmap::map::serde_seq")]
     rename: IndexMap<RustTypePath, OcamlTypePath>,
 }
 

@@ -15,7 +15,7 @@ use ocamlrep::MemoizationCache;
 use ocamlrep::ToOcamlRep;
 pub use ocamlrep::Value;
 
-extern "C" {
+unsafe extern "C" {
     fn ocamlpool_enter();
     fn ocamlpool_leave();
     fn ocamlpool_reserve_block(tag: u8, size: usize) -> usize;
@@ -43,7 +43,9 @@ impl Pool {
     /// will result.
     #[inline(always)]
     pub unsafe fn new() -> Self {
-        ocamlpool_enter();
+        unsafe {
+            ocamlpool_enter();
+        }
         Self {
             cache: MemoizationCache::new(),
         }
@@ -121,7 +123,7 @@ impl Allocator for Pool {
 /// Panics upon attempts to re-enter `to_ocaml`.
 #[inline(always)]
 pub unsafe fn to_ocaml<T: ToOcamlRep + ?Sized>(value: &T) -> usize {
-    let pool = Pool::new();
+    let pool = unsafe { Pool::new() };
     let result = pool.add_root(value);
     result.to_bits()
 }
@@ -194,7 +196,7 @@ pub fn is_exception_result(v: usize) -> bool {
 #[macro_export]
 macro_rules! ocaml_ffi_fn {
     (fn $name:ident($($param:ident: $ty:ty),+  $(,)?) -> $ret:ty $code:block) => {
-        #[no_mangle]
+        #[unsafe(no_mangle)]
         pub unsafe extern "C" fn $name ($($param: usize,)*) -> usize {
             $crate::catch_unwind(|| {
                 fn inner($($param: $ty,)*) -> $ret { $code }
@@ -207,7 +209,7 @@ macro_rules! ocaml_ffi_fn {
     };
 
     (fn $name:ident() -> $ret:ty $code:block) => {
-        #[no_mangle]
+        #[unsafe(no_mangle)]
         pub unsafe extern "C" fn $name (_unit: usize) -> usize {
             $crate::catch_unwind(|| {
                 fn inner() -> $ret { $code }
@@ -244,7 +246,7 @@ macro_rules! ocaml_ffi {
 #[macro_export]
 macro_rules! ocaml_ffi_with_arena_fn {
     (fn $name:ident<$lifetime:lifetime>($arena:ident: $arena_ty:ty, $($param:ident: $ty:ty),+ $(,)?) -> $ret:ty $code:block) => {
-        #[no_mangle]
+        #[unsafe(no_mangle)]
         pub unsafe extern "C" fn $name ($($param: usize,)*) -> usize {
             $crate::catch_unwind(|| {
                 use $crate::FromOcamlRepIn;
@@ -262,7 +264,7 @@ macro_rules! ocaml_ffi_with_arena_fn {
     };
 
     (fn $name:ident<$lifetime:lifetime>($arena:ident: $arena_ty:ty $(,)?) -> $ret:ty $code:block) => {
-        #[no_mangle]
+        #[unsafe(no_mangle)]
         pub unsafe extern "C" fn $name (_unit: usize) -> usize {
             $crate::catch_unwind(|| {
                 fn inner<$lifetime>($arena: $arena_ty) -> $ret { $code }
@@ -327,7 +329,7 @@ macro_rules! ocaml_ffi_with_arena {
 #[macro_export]
 macro_rules! ocaml_ffi_arena_result_fn {
     (fn $name:ident<$lifetime:lifetime>($arena:ident: $arena_ty:ty, $($param:ident: $ty:ty),+ $(,)?) -> $ret:ty $code:block) => {
-        #[no_mangle]
+        #[unsafe(no_mangle)]
         pub unsafe extern "C" fn $name ($($param: usize,)*) -> usize {
             $crate::catch_unwind(|| {
                 fn inner<$lifetime>($arena: $arena_ty, $($param: $ty,)*) -> $ret {
@@ -402,7 +404,7 @@ macro_rules! ocaml_registered_function_fn {
     };
 
     ($ocaml_name:expr, fn $name:ident($($param:ident: $ty:ty),+  $(,)?) -> $ret:ty) => {
-        #[no_mangle]
+        #[unsafe(no_mangle)]
         pub unsafe fn $name ($($param: $ty,)*) -> $ret {
             use std::sync::OnceLock;
             static FN: OnceLock<usize> = OnceLock::new();

@@ -14,16 +14,16 @@ use std::os::raw::c_int;
 use std::os::raw::c_void;
 use std::rc::Rc;
 
-use ocamlrep::from;
 use ocamlrep::Allocator;
+use ocamlrep::CUSTOM_TAG;
 use ocamlrep::FromError;
 use ocamlrep::FromOcamlRep;
 use ocamlrep::ToOcamlRep;
 use ocamlrep::Value;
-use ocamlrep::CUSTOM_TAG;
+use ocamlrep::from;
 use ocamlrep_ocamlpool::catch_unwind;
 
-extern "C" {
+unsafe extern "C" {
     fn caml_register_custom_operations(ops: *const CustomOperations);
     fn caml_serialize_block_1(data: *const u8, len: usize);
     fn caml_serialize_int_8(x: i64);
@@ -81,10 +81,12 @@ impl CustomOperations {
 /// Expose Rust type:
 ///
 /// ```rust
-/// use ocamlrep_custom::caml_serialize_default_impls;
-/// use ocamlrep_custom::{CamlSerialize, Custom};
-/// use ocamlrep_ocamlpool::ocaml_ffi;
 /// use std::cell::Cell;
+///
+/// use ocamlrep_custom::CamlSerialize;
+/// use ocamlrep_custom::Custom;
+/// use ocamlrep_custom::caml_serialize_default_impls;
+/// use ocamlrep_ocamlpool::ocaml_ffi;
 ///
 /// pub struct Counter(Cell<isize>);
 ///
@@ -247,7 +249,7 @@ fn rc_from_value<T: CamlSerialize>(value: Value<'_>) -> Result<&Rc<T>, FromError
 ///
 /// ```
 /// impl CamlSerialize for MyType {
-///    caml_serialize_default_impls!();
+///     caml_serialize_default_impls!();
 /// }
 /// ```
 pub trait CamlSerialize: Sized {
@@ -407,8 +409,10 @@ pub fn operations_helper<T: CamlSerialize>() -> CustomOperations {
 /// Should not be used directly. Interacts with the OCaml runtime and is
 /// thus unsafe to call in a multi-threaded context.
 pub unsafe fn register_helper<T>(ops: &'static CustomOperations) {
-    // Safety: operations struct has a static lifetime, it will live forever!
-    caml_register_custom_operations(ops as *const CustomOperations);
+    unsafe {
+        // Safety: operations struct has a static lifetime, it will live forever!
+        caml_register_custom_operations(ops as *const CustomOperations);
+    }
 }
 
 /// Helper function used by `operations_helper`. Returns a finalizer for custom

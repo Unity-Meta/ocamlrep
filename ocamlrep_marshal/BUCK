@@ -1,14 +1,13 @@
 load("@fbcode//common/ocaml/interop:defs.bzl", "RUST_FLAGS_2018")
 load("@fbcode_macros//build_defs:cpp_library.bzl", "cpp_library")
-load("@fbcode_macros//build_defs:rust_library.bzl", "rust_library")
+load("@fbsource//tools/build_defs:rust_library.bzl", "rust_library")
 
 oncall("hack")
 
 cpp_library(
-    # @autodeps-skip
     name = "ocaml_version",
     srcs = ["ocaml_version.c"],
-    external_deps = [
+    exported_external_deps = [
         ("supercaml", None, "ocaml-dev"),
     ],
 )

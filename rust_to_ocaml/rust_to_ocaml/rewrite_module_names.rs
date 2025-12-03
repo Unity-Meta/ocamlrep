@@ -3,8 +3,8 @@
 // This source code is licensed under the MIT license found in the
 // LICENSE file in the root directory of this source tree.
 
-use crate::ir;
 use crate::Config;
+use crate::ir;
 
 pub fn rewrite_file(config: &'static Config, file: &mut ir::File) {
     let rewriter = Rewriter { config };
@@ -59,7 +59,7 @@ impl Rewriter {
     }
 
     fn rewrite_type_path(&self, path: &mut ir::TypePath) {
-        match path.modules.get(0).map(ir::ModuleName::as_str) {
+        match path.modules.first().map(ir::ModuleName::as_str) {
             Some("crate" | "super") => {
                 path.modules.remove(0);
             }

@@ -6,11 +6,11 @@
 #![allow(unused_crate_dependencies)]
 #![feature(exit_status_error)]
 
+use ocamlrep_ocamlpool::FromOcamlRep;
 use ocamlrep_ocamlpool::ocaml_ffi;
 use ocamlrep_ocamlpool::ocaml_registered_function;
-use ocamlrep_ocamlpool::FromOcamlRep;
 
-extern "C" {
+unsafe extern "C" {
     fn ocamlpool_enter();
     fn ocamlpool_reserve_block(tag: u8, size: usize) -> usize;
     fn ocamlpool_leave();

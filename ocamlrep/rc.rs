@@ -27,7 +27,7 @@ use crate::ToOcamlRep;
 use crate::Value;
 
 const UNIT: usize = crate::value::isize_to_ocaml_int(0);
-const INVALID_GENERATION: usize = usize::max_value();
+const INVALID_GENERATION: usize = usize::MAX;
 
 struct OcamlValueCache<T> {
     forward_pointer: Cell<usize>,
@@ -77,11 +77,13 @@ impl<T: Clone> Clone for OcamlValueCache<T> {
 
 #[allow(clippy::partialeq_ne_impl)]
 impl<T: PartialEq> PartialEq for OcamlValueCache<T> {
+    #[allow(clippy::unconditional_recursion)]
     #[inline(always)]
     fn eq(&self, other: &OcamlValueCache<T>) -> bool {
         self.value.eq(&other.value)
     }
 
+    #[allow(clippy::unconditional_recursion)]
     #[inline(always)]
     fn ne(&self, other: &OcamlValueCache<T>) -> bool {
         self.value.ne(&other.value)
@@ -92,7 +94,9 @@ impl<T: Eq> Eq for OcamlValueCache<T> {}
 
 /// A single-threaded reference-counting pointer type, which, as a performance
 /// optimization, can cache the result of converting the pointed-to value to an
-/// OCaml value. `RcOc` stands for "reference counted with Ocaml-value cache".
+/// OCaml value.
+///
+/// `RcOc` stands for "reference counted with Ocaml-value cache".
 ///
 /// Internally uses `std::rc::Rc`, so restrictions on `Rc` also apply to `RcOc`.
 /// It is encouraged to follow `Rc` conventions (such as preferring the use of

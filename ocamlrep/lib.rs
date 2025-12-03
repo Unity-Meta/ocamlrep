@@ -61,7 +61,7 @@ let use_rust_tuple () =
 We could provide this symbol from the Rust side like this:
 
 ```rust
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn get_tuple(_unit: usize) -> usize {
     use ocamlrep::{Allocator, Arena};
     let arena = Box::leak(Box::new(Arena::new()));
@@ -95,7 +95,7 @@ let () =
 And call into OCaml from Rust (using the `ocaml` crate) to hand over the value:
 
 ```rust
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn make_and_use_tuple(_unit: usize) -> usize {
     use ocamlrep::{Allocator, Arena};
     let arena = Arena::new();
@@ -125,7 +125,7 @@ runtime")](#example-return-an-ocaml-value-to-the-ocaml-runtime) with one that
 allows the OCaml value to be garbage-collected when no longer used:
 
 ```rust
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn get_tuple(_unit: usize) -> usize {
     ocamlrep_ocamlpool::to_ocaml(&(Some(42), String::from("a")))
 }
@@ -162,7 +162,7 @@ let () = use_tuple (Some 42, "a")
 We could convert the tuple to a Rust value like this:
 
 ```rust
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn use_tuple(ocaml_tuple: usize) -> usize {
     // Import the OcamlRep trait to use its associated function `from_ocaml`.
     use ocamlrep::OcamlRep;
@@ -312,19 +312,19 @@ pub mod ptr;
 pub mod rc;
 
 pub use arena::Arena;
+pub use block::ABSTRACT_TAG;
 pub use block::Block;
 pub use block::BlockBuilder;
 pub use block::BlockBytes;
-pub use block::Color;
-pub use block::Header;
-pub use block::ABSTRACT_TAG;
 pub use block::CLOSURE_TAG;
 pub use block::CONT_TAG;
 pub use block::CUSTOM_TAG;
+pub use block::Color;
 pub use block::DOUBLE_ARRAY_TAG;
 pub use block::DOUBLE_TAG;
 pub use block::FORCING_TAG;
 pub use block::FORWARD_TAG;
+pub use block::Header;
 pub use block::INFIX_TAG;
 pub use block::LAZY_TAG;
 pub use block::NO_SCAN_TAG;
@@ -333,6 +333,7 @@ pub use block::STRING_TAG;
 pub use bumpalo::Bump;
 pub use cache::MemoizationCache;
 pub use error::FromError;
+pub use impls::OCamlInt;
 pub use impls::bytes_from_ocamlrep;
 pub use impls::bytes_to_ocamlrep;
 pub use impls::sorted_iter_to_ocaml_map;
@@ -480,7 +481,7 @@ pub trait Allocator: Sized {
     /// buffer and the block.
     fn byte_string_with_len(&self, len: usize) -> BlockBytes<'_> {
         let word_size = std::mem::size_of::<*const u8>();
-        let words = (len + 1 /*null-ending*/ + (word_size - 1)/*rounding*/) / word_size;
+        let words = (len + 1/*null-ending*/).div_ceil(word_size);
         let length = words * word_size;
         let mut block = self.block_with_size_and_tag(words, STRING_TAG);
         unsafe {
@@ -511,7 +512,7 @@ pub trait FromOcamlRep: Sized {
     /// naked pointers. None of these values may be modified while `from_ocaml`
     /// is running.
     unsafe fn from_ocaml(value: usize) -> Result<Self, FromError> {
-        Self::from_ocamlrep(Value::from_bits(value))
+        unsafe { Self::from_ocamlrep(Value::from_bits(value)) }
     }
 }
 

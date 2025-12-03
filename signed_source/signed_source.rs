@@ -9,7 +9,7 @@ use regex::bytes::Regex;
 
 /// This crate is a port of hphp/hack/src/utils/signed_source.ml, which was
 /// based on a historical version of fbsource/tools/signedsource.py.
-
+///
 /// The signing token, which you must embed in the file you wish to sign.
 /// Generally, you should put this in a header comment.
 pub static SIGNING_TOKEN: &str = concat!(
@@ -36,7 +36,9 @@ pub fn sign_file(data: &[u8]) -> Result<Vec<u8>, TokenNotFoundError> {
 }
 
 /// Sign a UTF-8 source file into which you have previously embedded a signing
-/// token. Signing modifies only the signing token, so the semantics of the file
+/// token.
+///
+/// Signing modifies only the signing token, so the semantics of the file
 /// will not change if the token is put in a comment.
 ///
 /// Returns `TokenNotFoundError` if no signing token is present.
@@ -115,14 +117,14 @@ pub struct TokenNotFoundError;
 
 #[cfg(test)]
 mod test {
+    use super::SIGNING_TOKEN;
+    use super::SignCheckResponse;
+    use super::TOKEN;
+    use super::TokenNotFoundError;
     use super::is_signed;
     use super::make_signing_token;
     use super::sign_utf8_file;
     use super::verify_signature;
-    use super::SignCheckResponse;
-    use super::TokenNotFoundError;
-    use super::SIGNING_TOKEN;
-    use super::TOKEN;
 
     static NO_TOKEN: &str = concat!("// @", "generated\nfn foo() {}");
     static INVALID: &str = concat!(

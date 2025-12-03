@@ -9,10 +9,10 @@ use std::fmt;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
+use crate::Allocator;
 use crate::block;
 use crate::block::Block;
 use crate::block::Header;
-use crate::Allocator;
 
 #[inline(always)]
 pub const fn is_ocaml_int(value: usize) -> bool {
@@ -197,7 +197,7 @@ impl Debug for Value<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.as_block() {
             None => write!(f, "{}", self.as_int().unwrap()),
-            Some(block) => write!(f, "{:?}", block),
+            Some(block) => write!(f, "{block:?}"),
         }
     }
 }
